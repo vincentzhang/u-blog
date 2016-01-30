@@ -2,10 +2,10 @@
 layout: post
 title:  "Technical Interview Cheat Sheet!"
 date:   2016-01-29 
-categories: coding, data structure
+categories: coding data-structure
 ---
 
-My technical interview cheat sheet, modified from this reference: https://gist.github.com/TSiege/cbb0507082bb18ff7e4b
+My technical interview cheat sheet, modified from this reference: [https://gist.github.com/TSiege/cbb0507082bb18ff7e4b](https://gist.github.com/TSiege/cbb0507082bb18ff7e4b)
 
 ## Studying for a Tech Interview Sucks, so here's a Cheat Sheet to Help
 
@@ -13,7 +13,9 @@ This list is meant to be a both a quick guide and reference for further research
 
 ## Data Structure Basics
 Note: The following data structures are called "Dynamic Sets" which basically means that you can change the value of a member.
-###**Array**
+
+### **Array**
+
 ####Definition:
 - Stores data elements based on an sequential, most commonly 0 based, index.
 - Based on [tuples](http://en.wikipedia.org/wiki/Tuple) from set theory.
@@ -38,6 +40,7 @@ Note: The following data structures are called "Dynamic Sets" which basically me
   
 
 ###**Linked List**
+
 ####Definition: 
 - Stores data with **nodes** that point to other nodes.
   - Nodes, at its most basic it has one datum and one reference (another node).
@@ -106,6 +109,7 @@ Note: The following data structures are called "Dynamic Sets" which basically me
   - Search: O(n)
 
 ###**Hash Table or Hash Map or Hash Set**
+
 ####Definition: 
 - Stores data with key value pairs.
 - **Hash functions** accept a key and return an output unique only to that specific key. 
@@ -131,6 +135,7 @@ Note: The following data structures are called "Dynamic Sets" which basically me
 - Predecessor: O(n)
 
 ### **Heap/PriorityQueue (min/max)**
+
 ####Big O efficiency:
 - Find Min/Find Max: O(1)
 - Insert: O(log n)
@@ -146,6 +151,7 @@ How to delete node x from a min-heap:
 Summary: delete the last node and move the value to the node to be deleted
 
 ###**Binary Tree**
+
 ####Definition: 
 - Is a tree like data structure where every node has at most two children.
   - There is one left and right child node.
@@ -193,7 +199,9 @@ Insert, delete and search: Average case: O(log n), Worst Case: O(log n)
 
 
 ## Search Basics
+
 ###**Breadth First Search**
+
 ####Definition:
 - An algorithm that searches a tree (or graph) by searching levels of the tree first, starting at the root.
   - It finds every node on the same level, most often moving left to right. 
@@ -213,6 +221,7 @@ Insert, delete and search: Average case: O(log n), Worst Case: O(log n)
 - V is number of vertices
 
 ###**Depth First Search**
+
 ####Definition:
 - An algorithm that searches a tree (or graph) by searching depth of the tree first, starting at the root.
   - It traverses left down a tree until it cannot go further.
@@ -245,12 +254,14 @@ Insert, delete and search: Average case: O(log n), Worst Case: O(log n)
 
 
 ## Efficient Sorting Basics
+
 ### **When to choose what sorting algorithm**
 Reference: http://web.mit.edu/1.124/LectureNotes/sorting.html
 - Merge Sort is usually preferred for sorting linked list
 - Quick Sort is O(n^2) in already sorted list
 
 ###**Merge Sort**
+
 ####Definition:
 - A comparison based sorting algorithm
   - Divides entire dataset into groups of at most two.
@@ -268,6 +279,7 @@ Reference: http://web.mit.edu/1.124/LectureNotes/sorting.html
 - Worst Case Sort: Merge Sort: O(n log n)
 
 ###**Quicksort**
+
 ####Definition:
 - A comparison based sorting algorithm
   - Divides entire dataset in half by selecting the average element and putting all smaller elements to the left of the average.
@@ -285,6 +297,7 @@ Reference: http://web.mit.edu/1.124/LectureNotes/sorting.html
 - Worst Case Sort: Merge Sort: O(n^2)
 
 ###**Bubble Sort**
+
 ####Definition:
 - A comparison based sorting algorithm
   - It iterates left to right comparing every couplet, moving the smaller element to the left.
@@ -315,7 +328,9 @@ Reference: http://web.mit.edu/1.124/LectureNotes/sorting.html
   - Misc: Build a max-heap in linear time (for the first-half/non-leaf nodes, run max_heapify which itself takes O(lgn))
 
 ## Basic Types of Algorithms
+
 ###**Recursive Algorithms**
+
 ####Definition:
 - An algorithm that calls itself in its definition.
   - **Recursive case** a conditional statement that is used to trigger the recursion.
@@ -330,6 +345,7 @@ Reference: http://web.mit.edu/1.124/LectureNotes/sorting.html
 
 
 ###**Iterative Algorithms**
+
 ####Definition:
 - An algorithm that is called repeatedly but for a finite number of times, each time being a single iteration.
   - Often used to move incrementally through a data set.
@@ -359,6 +375,7 @@ recursive method (array, n)       | iterative method (array)
     exit loop                     |
 ```
 ###**Greedy Algorithm**
+
 ####Definition:
 - An algorithm that, while executing, selects only the information that meets a certain criteria.
 - The general five components, taken from [Wikipedia](http://en.wikipedia.org/wiki/Greedy_algorithm#Specifics):
@@ -386,6 +403,7 @@ greedy algorithm (array)
 This algorithm never needed to compare all the differences to one another, saving it an entire iteration.
 
 ###**Dynamic Programming**
+
 ####Definition:
 - Programming here means planning.
 - This is an algorithm that caches previous results for later use in the case where the subproblems overlap.
@@ -395,12 +413,14 @@ This algorithm never needed to compare all the differences to one another, savin
 - Often very efficient at the cost of extra space.
 
 ## NP-complete problems
+
 ### Classic examples: 
 [traveling salesman](https://www.google.ca/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwiJ9ZT43tDKAhVHKCYKHTwoDIgQFggcMAA&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FTravelling_salesman_problem&usg=AFQjCNHHeqQL_wgjok2-NTUVuoNOORofXw&sig2=AYsR6pY_UkOJyHe7y9hE7Q)
 
 [knapsack problem](https://www.google.ca/url?sa=t&rct=j&q=&esrc=s&source=web&cd=3&cad=rja&uact=8&ved=0ahUKEwi50s-E39DKAhXJ5CYKHbHVAKIQFggkMAI&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FKnapsack_problem&usg=AFQjCNGOhvFPad51edpnPiyZVOKZhUwEYA&sig2=h6eAqXSp3gTbJZAm4K-Exg&bvm=bv.113034660,d.eWE)
 
 ## Operating System:
+
 ### **Key concepts**
 - processes
 - threads
