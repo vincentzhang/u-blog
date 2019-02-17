@@ -9,7 +9,7 @@
 title: Zichen (Vincent) Zhang
 #email: @
 description: > # this means to ignore newlines until "baseurl:"
-    Academic Website of Zichen Zhang.
+    Academic blog of Zichen Zhang.
 baseurl: "/~zichen2/blog" # the subpath of your site, e.g. /blog
 url: "http://webdocs.cs.ualberta.ca" # the base hostname & protocol for your site
 twitter_username: vzhangca
