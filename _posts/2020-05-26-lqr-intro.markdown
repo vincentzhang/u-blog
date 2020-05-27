@@ -1,0 +1,20 @@
+---
+layout: post
+title:  "LQR and RL"
+date:   2020-05-26
+categories: coding setup
+usemathjax: true
+---
+
+This is a introduction to Linear Quadratic Regulator (LQR) with a perspective on RL.
+
+
+
+
+
+
+## Reference:
+
+\[1\]: https://alan97.github.io/random/mathjax/
+
+[1]: https://alan97.github.io/random/mathjax/
