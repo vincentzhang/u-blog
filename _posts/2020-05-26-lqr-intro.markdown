@@ -6,17 +6,57 @@ categories: research rl control
 usemathjax: true
 ---
 
-This is a introduction to Linear Quadratic Regulator (LQR) with a perspective on RL.
 
-**Topics**
+This is an introduction to Linear Quadratic Regulator (LQR) for people with an RL background.  
+I view LQR as an important class of control problems that can be solved with RL algorithms.
 
-Discrete-time Deterministic LQR
+There are a lot of excellent tutorials online about LQR. But they are mostly in line with the control textbooks.
+I have not found any that is geared toward RL researchers/practitioners. 
+So here you go, I will try to explain LQR using the RL terminology.
 
-Discrete-time Stochastic LQR
+## Motivation
+Many real-world control tasks can be modeled as LQR, which has been extensively studied by the control theory community. In the RL community, LQR seems less popular, although it has been argued by Ben Becht that attempting to solve this (easy) problem using RL would help us to better understand the capability and limitation of RL algorithms [Reference to his blog].
+I will refer the readers to his blogs instead of repeating why that's the case.
 
-Continuous-time Deterministic LQR
+What I want to point out here is that, the RL community may have been throwing RL algorithms at LQR problems without necessarily knowing it.
+If we take a close look at the simulated control tasks commonly used in RL research today, lots of them can be approximated as LQR problems. For instance, some control environments in Openai Gym like pendulum, continuous mountain car and reacher, are approximately LQR. The `approximation` is in the sense that the system dynamics is often nonlinear that can be `approximated` by a linear model.
 
-Continuous-time Stochastic LQR [1]
+I'd like to think of LQR as 
+```
+a counterpart of tabular MDP in continous-time, 
+with continous state and action space.
+```
+
+## What is LQR?
+Let me first get some terminology straight.
+LQR stands for Linear Quadratic Regulator.
+
+- `Linear` refers to the linear system dynamics.
+- `Quadratic` refers to the quadratic cost.
+- `Regulator` (I guess) historically refers to `regulating` some signal of a system.
+
+In total, there are four sub-types of LQR that we consider:
+
+- Discrete-time Deterministic LQR
+- Discrete-time Stochastic LQR
+- Continuous-time Deterministic LQR
+- Continuous-time Stochastic LQR [1]
+
+Out of the four sub-types, the stochastic versions are what we will truly encounter in the real world. The deterministic versions assume no noise, which makes it easier to understand and analyze LQR.
+I will go over them one by one.
+
+**Formulation**
+
+Discrete-time Deterministic LQR can be expressed as:
+
+$$x_{k+1} = A x_k + B u_k$$
+
+$$c_{k} = x_k^\top S x_k + u_k^\top R u_k$$
+
+where $$x_k\in \mathcal{R}^n$$ and $$u_k\in \mathcal{R}^m$$ denote the state and action at step $$k$$ respectively.
+$$A$$ and $$B$$ are matrices of dimensions of `n x n` and $$nxm$$.
+$$c_k$$ denotes the cost at step $$k$$.
+
 
 **Concept**
 
