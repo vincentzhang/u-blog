@@ -89,29 +89,71 @@ What's nice about LQR is that, its structure allows for some neat properties:
   using routines in python, Julia, Matlab etc.
 ```
 
-**Optimal Policy**
+**Optimal Policy $$\pi_*$$**
 
-$$u_* = K_* x = -\gamma (R  + \gamma B^\top P_* B)^{-1} B^\top P_* A x $$
+The optimal control is given by
 
-where the $$P_*$$ is the solution to Algebraic Riccati Equation (ARE):
+\begin{equation}
+u_* = K_* x = -\gamma (R  + \gamma B^\top P_* B)^{-1} B^\top P_* A x 
+\label{eq:ustar}
+\end{equation}
 
-$$ P_* = S + \gamma A^\top P_* A - \gamma^2 A^\top P_* B(R+\gamma B^\top P_* B)^{-1} B^\top P_* A $$
+where $$x$$ is any given state and the $$P_*$$ is the solution to Algebraic Riccati Equation (ARE):
 
-$$P_*$$ is `n x n` symmetric matrix. 
+$$ P = S + \gamma A^\top P A - \gamma^2 A^\top P B(R+\gamma B^\top P B)^{-1} B^\top P A $$
+
+$$P$$ is `n x n` symmetric matrix. 
 Note that with the discount factor, the equation above is not a typical Riccati Equation as you might find on wikipedia but it's easy to show that it is equivalent to a typical ARE with a discounted A and B matrix.
 
-**State Value Function**
+Let's take a moment to understand what it implies.
+- In RL, to find the optimal policy, if the dynamics $$ p(s_{k+1}, r|s_k,a_k) $$ is known, we would need to run some iterative algorithms like value or policy iteration. 
+But in LQR, the optimal policy can be computed directly.
+<!-- or monte-carlo, bootstrapping or policy gradient if dynamics is unknown. -->
+- This matrix $$P_*$$ is the steady-state of a $$P_k$$ that evolves backward in time. 
+  In other words, we can only hope to achieve $$P_*$$ if the time is sufficiently away from the terminal time.
+  In finite-horizon, typically we don't attain $$P_*$$ so the optimal control $$u_*$$ in Eq. \eqref{eq:ustar} is in fact sub-optimal.
 
-The value function $$V_\pi(x_k)$$ can be expressed as $$V_\pi(x_k) = x_k^\top P_\pi x_k$$
-where $$P_\pi$$ is a cost matrix associated with the policy $$\pi: \mathcal{X} \to \mathcal{U}$$ that maps the states to actions. 
+**State Value Function $$V_\pi(x)$$**
+
+The value function can be expressed as 
+
+\begin{equation}
+V_\pi(x_k) = x_k^\top P_\pi x_k
+\end{equation}
+
+where $$P_\pi$$ is a cost matrix associated with the policy $$\pi: \mathcal{X} \to \mathcal{U}$$ that maps the state space $$\mathcal{X}$$ to action space $$\mathcal{U}$$. 
 Since the optimal policy is contained in the familiy of linear policies, we can assume that the policy is always linear: $$\pi(x_k) = K x_k$$ where $$K \in \mathcal{R}^{m\times n} $$.
 
-**Action Value Function**
+Similar to cost matrix $$P_*$$ for the optimal policy discussed above, the cost matrix $$P_\pi$$ for an arbitrary policy $$\pi = K_\pi x$$ also evolves backward in time and has a steady state.
+But instead of using ARE to solve it, we should use Lyapunov Equation:
+
+\begin{equation}
+
+\end{equation}
+
+
+
+**Action Value Function $$Q_\pi(x, u)$$**
 
 It can be shown that the action value function is quadratic in state and action [4].
-$$\begin{align}Q_\pi(x, u) &= c(x,u) + \gamma  V_\pi( Ax + Bu) \\ &= [x\ u]^\top \begin{bmatrix} S + \gamma A^\top P_\pi A &  \gamma A^\top P_\pi B \\ \gamma B^\top P_\pi A &  R+\gamma B^\top P_\pi B \end{bmatrix} [x\ u] \\&= [x\ u]^\top \begin{bmatrix} H_{11} &  H_{12} \\ H_{21} &  H_{22} \end{bmatrix} [x\ u] \end{align}$$
+$$
+\begin{align}
+\nonumber Q_\pi(x, u) &=  c(x,u) + \gamma  V_\pi( Ax + Bu) \\ 
+&= [x\ u]^\top \begin{bmatrix} S + \gamma A^\top P_\pi A &  \gamma A^\top P_\pi B \\ \gamma B^\top P_\pi A &  R+\gamma B^\top P_\pi B \end{bmatrix} [x\ u] \\
+&= [x\ u]^\top \begin{bmatrix} H_{11} &  H_{12} \\ H_{21} &  H_{22} \end{bmatrix} [x\ u] 
+\label{eq:Q}
+\end{align}
+$$
 
+where $$H$$ is a positive definite matrix of size `(n+m) x (n+m)`.
+Combined with Eq.\eqref{eq:ustar}, the greedy action at state $$x$$ wrt the current policy $$\pi$$ is:
 
+\begin{equation}
+u_g = -H_{22}^{-1} H_{21}
+\end{equation}
+
+What this entails is that,
+if we know the matrix $$H$$, we can perform policy improvement by taking the greedy action $$u_g$$.
 
 
 **Concept**

@@ -3,9 +3,12 @@
 		{
 			"path": "."
 		}
-	]
-
+	],
+	"settings": {
+		"latex-snippets.autoSuggestionOn": true
+	},
 	"[markdown]": {
 		"editor.quickSuggestions": true
 	}
+
 }
