@@ -19,7 +19,7 @@ Here's a brief summary:
 * On the top of the posts that you'd like to add mathjax support (it's called the YAML ''front matter'')
 , add the following line:
 ```
-usemathjax: true
+    usemathjax: true
 ```
 
 * Add these lines to `_includes/head.html`:
@@ -27,10 +27,17 @@ usemathjax: true
     {% raw %}
       <!-- for mathjax support -->
       {% if page.usemathjax %}
-        <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config({
+          TeX: { equationNumbers: { autoNumber: "AMS" } }
+          });
+        </script>
+        <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
       {% endif %}
     {% endraw %}
   ```
+  <!-- <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script> -->
+
 
 * After that, simply wrap the math symbols with two double-dollar sign `$$`:
 ```
