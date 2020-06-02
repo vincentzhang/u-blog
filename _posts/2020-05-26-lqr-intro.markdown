@@ -191,7 +191,7 @@ Since we know that the action value funciton is quadratic, we can build the quad
  
  There are $$(n+m)^2$$ entries in the matrix $$H$$ but we do not need to estimate that many parameters due to $$H$$ being symmetric. 
 
- The dimensionality of $$\theta$$ and $$ \phi(x, u) $$ is `(n+m+1)(n+m)/2`. $$\theta$$ can be viewed as a flatten version of the upper triangular of matrix $$H$$. 
+ The dimensionality of $$\theta$$ and $$ \phi(x, u) $$ is `(n+m+1)(n+m)/2`. $$\theta$$ can be viewed as a flattened version of the upper triangular of matrix $$H$$. 
 
 **Stability, Controllability**
 
