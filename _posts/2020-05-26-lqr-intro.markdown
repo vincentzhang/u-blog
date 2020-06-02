@@ -70,7 +70,7 @@ There are finite horizon and infinite horizon settings, corresponding to episodi
 
 **Discounted Cost**:
 
-$$ J(u_0, u_1, ...) = \sum_{k=0}^{N} \gamma^{k} \mathbb{E}[c_k] = \sum_{k=0}^{N} \gamma^{k} \mathbb{E}(x_k^\top S x_k + u_k^\top R u_k) $$
+$$ J(u_0, u_1, ...) = \sum_{k=0}^{N} \gamma^{k} \mathbb{E}[c_k] = \sum_{k=0}^{N-1} \gamma^{k} \mathbb{E}(x_k^\top S x_k + u_k^\top R u_k) + \gamma^{N} \mathbb{E}(x_N^\top S x_N)$$
 
 where the discount factor $$\gamma \in [0,1]$$.
 
@@ -83,7 +83,7 @@ In both objectives, the expectation is wrt the noise so it's not necessary for t
 The average cost objective is studied a lot more than the discounted cost objective in the control theory literature, which is the oppositive of the RL literature.
 
 Although the average cost setting seems to make sense especially for finite sample analysis,
-we only cover the discounted setting in the rest part of this post.
+we only cover the discounted setting in the rest part of this post to align with the RL algorithms.
 
 **Some properties of LQR**
 
@@ -119,6 +119,7 @@ But in LQR, the optimal policy can be computed directly.
 - This matrix $$P_*$$ is the steady-state of a $$P_k$$ that evolves backward in time. 
   In other words, we can only hope to achieve $$P_*$$ if the time is sufficiently away from the terminal time.
   In finite-horizon, typically we don't attain $$P_*$$ so the optimal control $$u_*$$ in Eq. \eqref{eq:ustar} is in fact sub-optimal.
+- If you wonder what to do when we don't know the true parameters, we use function approximation! Before I cover that later in this post, I want to lay out the foundation.
 
 **State Value Function $$V_\pi(x)$$**
 
@@ -165,7 +166,7 @@ where $$[x\ u]$$ is a column vector from concatenating the vectors $$x$$ and $$u
 Combined with Eq.\eqref{eq:ustar}, the greedy action at state $$x$$ wrt the current policy $$\pi$$ is:
 
 \begin{equation}
-u_g = -H_{22}^{-1} H_{21}
+u_g = -H_{22}^{-1} H_{21} x
 \label{eq:greedy}
 \end{equation}
 
@@ -186,10 +187,11 @@ Since we know that the action value funciton is quadratic, we can build the quad
 
  $$Q_\pi(x, u) = \theta^\top \phi(x, u) $$ 
  
- where $$\theta$$ is the weight vector and the $$ \phi(x, u) $$ is the quadratic basis feature vector.
+ where $$\theta$$ is the weight vector and the $$ \phi(x, u) $$ is the quadratic basis feature vector: $$ \phi(v) = [v_1^2, \cdots, v_1v_n, v_2^2, \cdots, v_2v_n, v_{n-1}^2, v_{n-1}v_n, \cdots v_n^2] $$ 
+ 
  There are $$(n+m)^2$$ entries in the matrix $$H$$ but we do not need to estimate that many parameters due to $$H$$ being symmetric. 
 
- The dimensionality of $$\theta$$ and $$ \phi(x, u) $$ is `(n+m+1)(n+m)/2`.
+ The dimensionality of $$\theta$$ and $$ \phi(x, u) $$ is `(n+m+1)(n+m)/2`. $$\theta$$ can be viewed as a flatten version of the upper triangular of matrix $$H$$. 
 
 **Stability, Controllability**
 
@@ -217,7 +219,7 @@ What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and
 
 ## Continuous-time Deterministic LQR
 
-Going from discrte-time to continuous-time require us to formulate the following differently:
+Shifting paradigm from discrte-time to continuous-time requires formulating the following differently:
 ```
 - time index going from algorithmic time k to actual time t
 - integration replaces summation
@@ -246,7 +248,7 @@ where $$S$$ and $$R$$ are fixed, symmetric positive semi-definite and definite m
 
 **Discounted Cost**:
 
-$$ J(u) = \int_0^T \gamma^{t} \mathbb{E}[c_t] dt = \int_0^T \gamma^{t} \mathbb{E}[x(t)^\top S x(t) + u(t)^\top R u(t)] dt $$
+$$ J(u) = \int_0^T \gamma^{t} \mathbb{E}[c_t] dt = \int_0^T \gamma^{t} \mathbb{E}[x(t)^\top S x(t) + u(t)^\top R u(t)] dt +  \gamma^{T}\mathbb{E}[x(T)^\top S x(T)]$$
 
 **Average Cost**:
 
@@ -342,7 +344,7 @@ $$V_\pi(x(t+h))$$ can be computed by applying Taylor approximation based on the 
 
 What's remarkable is that 
 the greedy action wrt the current policy $$\pi$$ is the same as Eq. \eqref{eq:greedy}:
-$$u_g = -H_{22}^{-1} H_{21}$$.
+$$u_g = -H_{22}^{-1} H_{21} x$$.
 In fact, it's the same across all four subtypes of LQR.
 What that implies is that, if we run function approximation with model-free algorithms, 
 the parameterization of the action value function can be the same. 
@@ -352,8 +354,7 @@ Once we obtain good estimation of the weight vector, we can compute the greedy a
 
 For `stability`, we need to make sure the eigenvalues of $$A+BK$$ are all negative.
 
-For `controllability`, it's almost the same as in the discrete-time except that the $$A, B$$ should be replaced by the discretized-version:
-$$\tilde{A} = I + hA$$, $$\tilde{B} = hB$$.
+For `controllability`, it's the same as in the discrete-time.
 
 ## Continuous-time Stochastic LQR
 
@@ -397,7 +398,7 @@ Hence we just need some algorithm that does policy evalutation well.
 Standard on-policy and off-policy algorithms like Sarsa, Q-learning can be used here.
 
 The problem is that LQR does not put constraint on the control so to get the algorithm working may be more difficult than it appears.
-The greedy action equation $$u_g = -H_{22}^{-1} H_{21}$$ involves an inverse of an estimate, which is risky.
+The greedy action equation $$u_g = -H_{22}^{-1} H_{21} x$$ involves an inverse of an estimate, which is risky.
 
 A few details that are worth attention:
 - The initial policy $$K_0$$ needs to be `stable`. 
@@ -416,6 +417,12 @@ A few details that are worth attention:
 - The reward/cost: instead of Euclidean distance, should be the square of Euclidean distance, plus some quadratic cost on the action. Analysis can be performed for the case of zero-cost on action. But the optimal policy will be bang-bang control.
 - The system dynamic will be approximated as piece-wise linear, which is another layer of approximation on top of the time-invariant system discussed in this post.
 
+## Show me the code
+
+Well, sorry that the code is not fully developed at this point to share.
+
+But Stephen Tu has an awesome tutorial on running LQR on Cartpole Swing-Up:
+[https://github.com/stephentu/zero-to-cartpole/blob/master/swing-up.ipynb](https://github.com/stephentu/zero-to-cartpole/blob/master/swing-up.ipynb)
 
 
 
