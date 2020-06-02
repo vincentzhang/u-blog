@@ -213,7 +213,7 @@ $$c_{k} = x_k^\top S x_k + u_k^\top R u_k$$
 where $$w_k \in \mathcal{R}^n $$ is the noise term, often modeled as an i.i.d multi-variate Gaussian $$w_k \sim \mathcal{N}(0,\Sigma_w) $$. 
 The per-step cost is defined the same way as the deterministic case.
 
-What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and the matrices $$P_*, P_\pi$$ remain the same as the deterministic case. The value and action value functions differ from the ones in deterministic cases by only a constant, caused by the accumulation of additional cost from the noise.
+What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and the matrices $$P_*, P_\pi$$ remain the same as the deterministic case. The value and action value functions differ from the ones in deterministic cases by only a constant(time dependent, but not state or action dependent). It is caused by the accumulation of additional cost from the noise and would reduce over time to 0 at the terminal state.
 
 ## Continuous-time Deterministic LQR
 
@@ -260,7 +260,7 @@ It is often neglected in the RL literature but shown to affect the performance o
 
 **Optimal Policy $$\pi_*$$**
 
-The optimal control is given by
+The optimal control is again, linear in the state:
 
 \begin{equation}
 u_* = K_* x = -\gamma^h  R^{-1} B^\top P_* x 
@@ -269,12 +269,152 @@ u_* = K_* x = -\gamma^h  R^{-1} B^\top P_* x
 
 **State Value Function $$V_\pi(x)$$**
 
+Same as in the discrete-time case, the value function is quadratic in the state:
+
+\begin{equation}
+V_\pi(x_t) = x_t^\top P_\pi x_t
+\end{equation}
+
+To solve for the cost matrix $$P_*$$ for the optimal policy, 
+we use the following equation 
+
+\begin{equation}
+    0 = S + \gamma^h (PA+A^\top P) - \gamma^{2h}PBR^{-1}B^\top P - \frac{1-\gamma^h}{h}P
+    \label{eq:care}
+\end{equation}
+
+which can be rearranged as:
+
+\begin{equation}
+    0 = S + (P\tilde{A}+\tilde{A}^\top P) - P\tilde{B}R^{-1}\tilde{B}^\top P
+\end{equation}
+where
+$$\tilde{A} = \gamma^h A - \frac{1-\gamma^h}{2h} I_{n \times n}$$
+and 
+$$\tilde{B} = \gamma^h B$$
+
+This equation is called the Continuous-time Algebraic Riccati Equation (CARE).
+
+Similar to the discrete-time case, we use a different equation to solve for 
+the cost matrix $$P_\pi$$ for an arbitrary policy $$\pi = K_\pi x$$:
+
+\begin{equation}
+    0 = S + K_\pi^\top R K_\pi  - \frac{1-\gamma^h}{h}P  + (\gamma^h (A+BK_\pi))^\top P + P (\gamma^h (A+BK_\pi))
+    \label{eq:cts-lyap}
+\end{equation}
+
+which can be rearranged as:
+
+\begin{equation}
+    0 = M + D^\top P + P D
+\end{equation}
+where
+$$ M = S + K_\pi^\top R K_\pi $$, and $$D = \gamma^h (A+BK_\pi)  - \frac{1-\gamma^h}{2h} I_{n \times n}   $$
+
+This is the continuous-time [Lyapunov Equation](https://en.wikipedia.org/wiki/Lyapunov_equation){:target="_blank"}.
+
+$$P_\pi$$ is the solution to this Lyapunov Equation. 
+Again, both $$P_\pi$$ and $$P_*$$ are the steady-state and we need to be aware of the situation when the steady-state is not attainable in finite horizon.
+The above equations Eq. \eqref{eq:care} \eqref{eq:cts-lyap} can be modified a bit to include $$\dot{P}$$, which can be used to solve for $$P$$ recursively backward in time, similar to the discrete-time case.
+
 **Action Value Function $$Q_\pi(x, u)$$**
 
+$$
+\begin{align}
+    Q_\pi(x(t),u(t)) &= r(x(t),u(t)) + \gamma^h V_\pi(x(t+h)) \\
+    &= [x\ u]^\top
+    \begin{bmatrix} hS + \gamma^h(P_\pi +hP_\pi A+hA^\top P_\pi) & \gamma^h h P_\pi B \\ \gamma^h h B^\top P_\pi & hR \end{bmatrix} \begin{bmatrix}  x \\ u \end{bmatrix}  \\
+    &= [x\ u]^\top
+     \begin{bmatrix} H_{11} &  H_{12} \\  H_{21} &  H_{22} \end{bmatrix}
+     [x\ u] \\
+     &= [x\ u]^\top
+     H_\pi
+     [x\ u]
+\end{align}
+$$
 
-## Continuous-time Stochastic LQR [1]
+where the $$r(x(t),u(t))$$ is the accumulated cost in $$[t,t+h]$$, approximated as:
+$$r(x(t),u(t)) = h c_t = h(x(t)^\top S x(t) + u(t)^\top R u(t))$$.
+
+$$V_\pi(x(t+h))$$ can be computed by applying Taylor approximation based on the system dynamics.
+
+**Greedy Policy Doesn't Change in Function Approximation**
+
+What's remarkable is that 
+the greedy action wrt the current policy $$\pi$$ is the same as Eq. \eqref{eq:greedy}:
+$$u_g = -H_{22}^{-1} H_{21}$$.
+In fact, it's the same across all four subtypes of LQR.
+What that implies is that, if we run function approximation with model-free algorithms, 
+the parameterization of the action value function can be the same. 
+Once we obtain good estimation of the weight vector, we can compute the greedy action in a unified way.
+
+**Stability and Controllability**
+
+For `stability`, we need to make sure the eigenvalues of $$A+BK$$ are all negative.
+
+For `controllability`, it's almost the same as in the discrete-time except that the $$A, B$$ should be replaced by the discretized-version:
+$$\tilde{A} = I + hA$$, $$\tilde{B} = hB$$.
+
+## Continuous-time Stochastic LQR
+
+In stochastic case, we consider the process noise and have the following dynamic:
+
+A stochastic continuous-time LQR is similar to the deterministic case in Eq.\eqref{eq:lqr-cts} except that it has disturbance in its state dynamics [1]:
+$$
+\begin{align}
+    dx(t) &= (Ax(t)+Bu(t))dt + \sigma_w dw(t) \\
+    c_t &= c(x(t), u(t)) = x(t)^\top S x(t) + u(t)^\top R u(t)
+    \label{eq:slqr-cts}
+\end{align}
+$$
+
+where the vector $$w(t)\in \mathbb{R}^n$$ is the disturbance of the system, $$\sigma_w$$ denotes a constant that scales the variance of the disturbance. 
+
+$$\{w(t):t\in[0,\infty)\}$$ is an n-dimensional [Wiener process](https://en.wikipedia.org/wiki/Wiener_process){:target="_blank"} (or, standard Brownian motion) that has the following properties:
+
+- $$w(0) = \mathbf{0}$$.
+- $$w(t)$$ has stationary independent increments: 
+  
+  the distribution of $$w(t)-w(s)$$ is independent of the past events $$\{w(r): r\leq s\}$$ and $$w(s+t) - w(s)=w(t)-w(0)=w(t)$$.
+- $$w(t)-w(s) \sim \mathcal{N}(\mathbf{0},(t-s)I)$$ for any $$0\leq s\leq t$$. We have $$w(t) \sim \mathcal{N}(\mathbf{0},tI)$$.
+- $$w(t)$$ is continuous in $$t$$ almost surely.
+
+<!-- In continuous-time, the noise is more complicated than the i.i.d random vectors in the discrete-time counterpart. -->
+
+**Differences from the deterministic case?**
+
+It's pretty much the same as in the discrete-time case.
+The optimal control $$\pi_*$$, $$P_*$$ and $$P_\pi$$ remains the same.
+Value function and action value function have an additional time-dependent constant term (state/action indepdent).
+This term gradually reduces in time to zero at the terminal state.
+
+## Run RL Algorithm on LQR
+
+This section covers how we can run value-based RL algorithms on LQR.
+
+It is mentioned earlier that once we have an approximated action value function $$Q_\pi$$, we know how to greedify the policy.
+Hence we just need some algorithm that does policy evalutation well. 
+Standard on-policy and off-policy algorithms like Sarsa, Q-learning can be used here.
+
+The problem is that LQR does not put constraint on the control so to get the algorithm working may be more difficult than it appears.
+The greedy action equation $$u_g = -H_{22}^{-1} H_{21}$$ involves an inverse of an estimate, which is risky.
+
+A few details that are worth attention:
+- The initial policy $$K_0$$ needs to be `stable`. 
+- The system need to be `controllable`.
+- For model-free algorithms, we only have guarantee of convergence to the optimal policy in the discrete-time deterministic LQR, for policy iteration.
+- The behaviour policy also needs to be explorative as in tabular MDP. It's called persistent excitation in control theory.
+- The correlation in the data generated by RL makes it difficult to solve for the weight vector which poses more risk in greedifying the policy.
+- Instead of using the greedy policy plus exploration noise as the behaviour policy, it may be better to use a fixed `stable` policy.
+
+<!-- Add discussion on the optimality of model-based algorithms, and the finite-time analysis -->
+<!-- controllability and stability in cont-time case -->
+
 ## Formulating an LQR on reacher tasks
-...
+
+- The input: state $$x$$ is the distance between the current position and the target position
+- The reward/cost: instead of Euclidean distance, should be the square of Euclidean distance, plus some quadratic cost on the action. Analysis can be performed for the case of zero-cost on action. But the optimal policy will be bang-bang control.
+- The system dynamic will be approximated as piece-wise linear, which is another layer of approximation on top of the time-invariant system discussed in this post.
 
 
 
