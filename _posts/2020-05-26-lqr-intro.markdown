@@ -199,13 +199,16 @@ For a system to be controllable, the matrix $$[B | AB | A^2B | ... | A^{k}B | ..
 
 ## Discrete-time Stochastic LQR
 
-When we consider the noise during the transition of the system, the dynamic can be written as
+When we consider the noise during the transition of the system, the problem can be formulated as
 
 $$x_{k+1} = A x_k + B u_k + w_k$$
 
-where $$w_k \in \mathcal{R}^n $$ is the noise term, often modeled as an i.i.d multi-variate Gaussian $$w_k \sim \mathbb{N}(0,\Sigma_w) $$.
+$$c_{k} = x_k^\top S x_k + u_k^\top R u_k$$
 
-What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and the matrices $P_*, P_\pi$ remain the same as the deterministic case. The value and action value functions differ from the ones in deterministic cases by only a constant.
+where $$w_k \in \mathcal{R}^n $$ is the noise term, often modeled as an i.i.d multi-variate Gaussian $$w_k \sim \mathbb{N}(0,\Sigma_w) $$. 
+The per-step cost is defined the same way as the deterministic case.
+
+What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and the matrices $$P_*, P_\pi$$ remain the same as the deterministic case. The value and action value functions differ from the ones in deterministic cases by only a constant, caused by the accumulation of additional cost from the noise.
 
 ## Continuous-time Deterministic LQR
 ...
