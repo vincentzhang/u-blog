@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Introduction to LQR from RL perspective"
+title:  "An Introduction to LQR from RL perspective"
 author: Vincent Zhang
 date:   2020-05-26
 categories: research rl control
@@ -14,6 +14,7 @@ I view LQR as an important class of control problems that can be solved with RL 
 There are a lot of excellent tutorials online about LQR. But they are mostly in line with the control theory textbooks.
 I have not found any that is geared toward RL researchers/practitioners. 
 So here you go, I will try to explain LQR using the RL terminology in this post.
+It's intended to cover the concepts that can be related to the RL side of things, rather than a comprehensive coverage of all details of LQR.
 
 ## Motivation
 Many real-world control tasks can be modeled as LQR, which has been extensively studied by the control theory community. In the RL community, LQR seems less popular, although it has been argued by Ben Becht that attempting to solve this (easy?) problem using RL would help us to better understand the capability and limitation of RL algorithms [2].
@@ -42,7 +43,7 @@ In total, there are four sub-types of LQR that we consider:
 - Discrete-time Deterministic LQR
 - Discrete-time Stochastic LQR
 - Continuous-time Deterministic LQR
-- Continuous-time Stochastic LQR [1]
+- Continuous-time Stochastic LQR
 
 The key difference between the deterministic versions and the stochastic versions is that the former is noiseless whereas the latter considers noise in the dynamics.
 The stochastic version is what we will truly encounter in the real world. 
@@ -190,14 +191,27 @@ Since we know that the action value funciton is quadratic, we can build the quad
 <!-- Optimal control theory offers saftey guarantees.  -->
 Two quite useful concepts from control theory are stability and controllability [3].
 
-Stability of policy $$K_\pi$$ tells us if following this policy would lead to divergence.
+`Stability` of policy $$K_\pi$$ tells us if following this policy would lead to divergence.
 It is determined by $$A, B$$ and $$K_\pi$$. For a policy to be stable, the eigenvalues of the matrix $$(A+BK_\pi)$$ needs to be strictly within the unit circle(often complex numbers).
 
-Controllability of the system tells us for any initial state $$x_0$$, if there exists some policy that drives the state to zero. It is determined by $$A, B$$.
-For a system to be controllable, the matrix $$[B | AB | A^2B | ... | A^{k}B | ... | A^{n−1}B ]$$ needs to be full row rank.
+`Controllability` of the system tells us for any initial state $$x_0$$, if there exists some policy that drives the state to zero. It is determined by $$A, B$$.
+For a system to be controllable, the matrix $$[B | AB | A^2B | ... | A^{k}B | ... | A^{n−1}B ]$$ needs to be full rank.
 
+## Discrete-time Stochastic LQR
 
+When we consider the noise during the transition of the system, the dynamic can be written as
 
+$$x_{k+1} = A x_k + B u_k + w_k$$
+
+where $$w_k \in \mathcal{R}^n $$ is the noise term, often modeled as an i.i.d multi-variate Gaussian $$w_k \sim \mathbb{N}(0,\Sigma_w) $$.
+
+What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and the matrices $P_*, P_\pi$ remain the same as the deterministic case. The value and action value functions differ from the ones in deterministic cases by only a constant.
+
+## Continuous-time Deterministic LQR
+...
+
+## Continuous-time Stochastic LQR [1]
+...
 
 
 
@@ -216,10 +230,10 @@ For a system to be controllable, the matrix $$[B | AB | A^2B | ... | A^{k}B | ..
 
 [4] S. J. Bradtke.  Reinforcement learning applied to linear quadratic regulation. In Advances in neural information processing systems, pages 295–302, 1993
 
-<!-- [2] Stephen's Lecture Notes
+[5] Stephen Boyd's EE363 Lecture Slides
 
-[4] Csaba's paper
+<!-- [4] Csaba's paper
 
-[5] Ben's paper -->
+[5] Ben's paper --> 
 
 
