@@ -80,6 +80,11 @@ $$ J(u_0, u_1, ...) = \lim_{N\to \infty} \frac{1}{N} \sum_{k=0}^{N} \mathbb{E}[c
 
 In both objectives, the expectation is wrt the noise so it's not necessary for the deterministic case but we leave it there for completeness.
 
+The average cost objective is studied a lot more than the discounted cost objective in the control theory literature, which is the oppositive of the RL literature.
+
+Although the average cost setting seems to make sense especially for finite sample analysis,
+we only cover the discounted setting in the rest part of this post.
+
 **Some properties of LQR**
 
 What's nice about LQR is that, its structure allows for some neat properties:
@@ -205,19 +210,71 @@ $$x_{k+1} = A x_k + B u_k + w_k$$
 
 $$c_{k} = x_k^\top S x_k + u_k^\top R u_k$$
 
-where $$w_k \in \mathcal{R}^n $$ is the noise term, often modeled as an i.i.d multi-variate Gaussian $$w_k \sim \mathbb{N}(0,\Sigma_w) $$. 
+where $$w_k \in \mathcal{R}^n $$ is the noise term, often modeled as an i.i.d multi-variate Gaussian $$w_k \sim \mathcal{N}(0,\Sigma_w) $$. 
 The per-step cost is defined the same way as the deterministic case.
 
 What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and the matrices $$P_*, P_\pi$$ remain the same as the deterministic case. The value and action value functions differ from the ones in deterministic cases by only a constant, caused by the accumulation of additional cost from the noise.
 
 ## Continuous-time Deterministic LQR
-...
+
+Going from discrte-time to continuous-time require us to formulate the following differently:
+```
+- time index going from algorithmic time k to actual time t
+- integration replaces summation
+- discount changes with the actual time t
+- we need to discretize the system
+```
+
+The continuous-time deterministic LQR can be described by
+
+$$
+\begin{align}
+    \dot x(t) &= Ax(t)+Bu(t) \\
+     c_t &= c(x(t), u(t)) = x(t)^\top S x(t) + u(t)^\top R u(t)
+    \label{eq:lqr-cts}
+\end{align}
+$$
+<!-- $$K$$ is a linear feedback controller.  u(t) &= K x(t) -->
+
+where $$t$$ is the actual time, 
+the vector $$x\in \mathbb{R}^n$$ is state of the system and the vector $$u\in \mathbb{R}^m$$ is
+the control signal. 
+Same as in the discrete-time system, $$A$$, $$B$$ are fixed matrices of dimension $$n \times n$$, $$n \times m$$, respectively.  
+A learner continuously updates the control signal after observing the current state of the system. 
+The cost $$c_t$$ is a quadratic function of the state and control,
+where $$S$$ and $$R$$ are fixed, symmetric positive semi-definite and definite matrices respectively, of dimension $$n \times n$$ and $$m \times m$$.
+
+**Discounted Cost**:
+
+$$ J(u) = \int_0^T \gamma^{t} \mathbb{E}[c_t] dt = \int_0^T \gamma^{t} \mathbb{E}[x(t)^\top S x(t) + u(t)^\top R u(t)] dt $$
+
+**Average Cost**:
+
+$$ J(u) = \lim_{T\to \infty} \frac{1}{T} \int_0^T \mathbb{E}[c_t] dt =\lim_{T\to \infty} \frac{1}{T} \int_0^T \mathbb{E}[x(t)^\top S x(t) + u(t)^\top R u(t)] dt $$
+
+**Discretization of the System with Time Duration $$h$$**:
+
+To compute the cost, we need to discretize the system with time duration $$h$$. 
+In practice, $$h$$ is a parameter of the algorithm that needs to be chosen carefully.
+It is often neglected in the RL literature but shown to affect the performance of the algorithm [6,7].
+
+**Optimal Policy $$\pi_*$$**
+
+The optimal control is given by
+
+\begin{equation}
+u_* = K_* x = -\gamma^h  R^{-1} B^\top P_* x 
+\label{eq:ustar-cts}
+\end{equation}
+
+**State Value Function $$V_\pi(x)$$**
+
+**Action Value Function $$Q_\pi(x, u)$$**
+
 
 ## Continuous-time Stochastic LQR [1]
+## Formulating an LQR on reacher tasks
 ...
-
-
-
 
 
 
@@ -225,15 +282,20 @@ What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and
 
 
 ## Reference:
-[1] Wendell, H. FLEMING, R. W. Rishel, and W. Raymond. "Deterministic and stochastic optimal control." (1975).
+[1] Wendell, H. FLEMING, R. W. Rishel, and W. Raymond. Deterministic and stochastic optimal control. (1975).
 
 [2] Blog of Ben Recht: http://www.argmin.net/2018/02/08/lqr/
 
-[3] D. P. Bertsekas.Dynamic programming and optimal control,  volume 1.  Athena scientific, Belmont, MA, 2005.
+[3] D. P. Bertsekas. Dynamic programming and optimal control,  volume 1.  Athena scientific, Belmont, MA, 2005.
 
-[4] S. J. Bradtke.  Reinforcement learning applied to linear quadratic regulation. In Advances in neural information processing systems, pages 295–302, 1993
+[4] S. J. Bradtke.  Reinforcement learning applied to linear quadratic regulation. NIPS 1993
 
 [5] Stephen Boyd's EE363 Lecture Slides
+
+[6] Mahmood, A. Rupam, Dmytro Korenkevych, Brent J. Komer, and James Bergstra. Setting up a reinforcement learning task with a real-world robot. IROS 2018.
+
+[7] Tallec, C., Blier, L. & Ollivier, Y.. Making Deep Q-learning methods robust to time discretization. ICML 2019.
+
 
 <!-- [4] Csaba's paper
 
