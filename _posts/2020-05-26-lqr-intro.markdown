@@ -11,9 +11,9 @@ usemathjax: true
 This is an introduction to Linear Quadratic Regulator (LQR) for people with an RL background.  
 I view LQR as an important class of control problems that can be solved with RL algorithms.
 
-There are a lot of excellent tutorials online about LQR. But they are mostly in line with the control textbooks.
+There are a lot of excellent tutorials online about LQR. But they are mostly in line with the control theory textbooks.
 I have not found any that is geared toward RL researchers/practitioners. 
-So here you go, I will try to explain LQR using the RL terminology.
+So here you go, I will try to explain LQR using the RL terminology in this post.
 
 ## Motivation
 Many real-world control tasks can be modeled as LQR, which has been extensively studied by the control theory community. In the RL community, LQR seems less popular, although it has been argued by Ben Becht that attempting to solve this (easy?) problem using RL would help us to better understand the capability and limitation of RL algorithms [2].
@@ -80,6 +80,7 @@ $$ J(u_0, u_1, ...) = \lim_{N\to \infty} \frac{1}{N} \sum_{k=0}^{N} \mathbb{E}[c
 In both objectives, the expectation is wrt the noise so it's not necessary for the deterministic case but we leave it there for completeness.
 
 **Some properties of LQR**
+
 What's nice about LQR is that, its structure allows for some neat properties:
 ```
 * the state and action value function are a quadratic function
@@ -122,16 +123,25 @@ V_\pi(x_k) = x_k^\top P_\pi x_k
 \end{equation}
 
 where $$P_\pi$$ is a cost matrix associated with the policy $$\pi: \mathcal{X} \to \mathcal{U}$$ that maps the state space $$\mathcal{X}$$ to action space $$\mathcal{U}$$. 
-Since the optimal policy is contained in the familiy of linear policies, we can assume that the policy is always linear: $$\pi(x_k) = K x_k$$ where $$K \in \mathcal{R}^{m\times n} $$.
+Since the optimal policy is contained in the familiy of linear policies, we can assume that the policy is always linear: $$\pi(x_k) = K_\pi x_k$$ where $$K_\pi \in \mathcal{R}^{m\times n} $$.
 
 Similar to cost matrix $$P_*$$ for the optimal policy discussed above, the cost matrix $$P_\pi$$ for an arbitrary policy $$\pi = K_\pi x$$ also evolves backward in time and has a steady state.
-But instead of using ARE to solve it, we should use Lyapunov Equation:
+But instead of using ARE to solve it, we should use a different equation:
 
 \begin{equation}
-
+-P_k + S + K^\top R K + \gamma [(A+BK)^\top P_{k+1}(A+BK)] = 0
 \end{equation}
 
+Let $$M = S + K^\top R K$$, $$L = \sqrt{\gamma}(A+BK)$$, 
+we can rewrite the equation above as
+\begin{equation}
+-P_k + M + L^\top P_{k+1} L = 0
+\end{equation}
 
+which is called [Lyapunov Equation](https://en.wikipedia.org/wiki/Lyapunov_equation){:target="_blank"}.
+
+$$P_\pi$$ is the steady-state solution to this Lyapunov Equation. 
+Note that, if the horizon is finite and not long enough to attain steady-state, we can solve for $$P_\pi$$ recursively (backward in time) where the base case is given by the $$P_k$$ at the terminal step $$N$$ where we assume no control cost: $$V(N) = x_N ^\top S x_N$$.
 
 **Action Value Function $$Q_\pi(x, u)$$**
 
@@ -145,25 +155,48 @@ $$
 \end{align}
 $$
 
-where $$H$$ is a positive definite matrix of size `(n+m) x (n+m)`.
+where $$[x\ u]$$ is a column vector from concatenating the vectors $$x$$ and $$u$$. $$H$$ is a positive definite matrix of size `(n+m) x (n+m)`.
 Combined with Eq.\eqref{eq:ustar}, the greedy action at state $$x$$ wrt the current policy $$\pi$$ is:
 
 \begin{equation}
 u_g = -H_{22}^{-1} H_{21}
+\label{eq:greedy}
 \end{equation}
 
-What this entails is that,
+What this implies is that,
 if we know the matrix $$H$$, we can perform policy improvement by taking the greedy action $$u_g$$.
+Now this is one of the nicest feature of LQR from RL perspective.
+It is well known that problems involving continuous actions are difficult for RL algorithms. But in the case of LQR, we can compute the greedy policy if we have some estimate of matrix $$H$$ after policy evaluation, just like in discrete action case!
+
+**Model-based vs Model-free, and Function Approximation**
+
+In most cases, we don't know the true parameters $$A, B$$ of the system.
+Model-based algorithms estimate the dynamic model and compute the optimal control based on the estimated parameters $$A, B$$.
+Model-free algorithms do not explicitly estimate the model. Instead, we approximate the optimal action value function by estimating the matrix $$H$$ in Eq.\eqref{eq:Q} and compute the optimal control by Eq.\eqref{eq:greedy}.
+
+What functions shall we choose for approximating the action value function?
+We can throw a neural network at it. But that might be an overkill. 
+Since we know that the action value funciton is quadratic, we can build the quadratic basis functions from the state-action pair $$[x\ u]$$ and approximate the action value as a linear combination of them:
+
+ $$Q_\pi(x, u) = \theta^\top \phi(x, u) $$ 
+ 
+ where $$\theta$$ is the weight vector and the $$ \phi(x, u) $$ is the quadratic basis feature vector.
+ There are $$(n+m)^2$$ entries in the matrix $$H$$ but we do not need to estimate that many parameters due to $$H$$ being symmetric. 
+
+ The dimensionality of $$\theta$$ and $$ \phi(x, u) $$ is `(n+m+1)(n+m)/2`.
+
+**Stability, Controllability**
+
+<!-- Optimal control theory offers saftey guarantees.  -->
+Two quite useful concepts from control theory are stability and controllability [3].
+
+Stability of policy $$K_\pi$$ tells us if following this policy would lead to divergence.
+It is determined by $$A, B$$ and $$K_\pi$$. For a policy to be stable, the eigenvalues of the matrix $$(A+BK_\pi)$$ needs to be strictly within the unit circle(often complex numbers).
+
+Controllability of the system tells us for any initial state $$x_0$$, if there exists some policy that drives the state to zero. It is determined by $$A, B$$.
+For a system to be controllable, the matrix $$[B | AB | A^2B | ... | A^{k}B | ... | A^{n−1}B ]$$ needs to be full row rank.
 
 
-**Concept**
-Riccati Equation
-
-Lyapunov Equation
-
-Stability, Controllability
-
-Function Approximation
 
 
 
