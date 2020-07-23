@@ -8,6 +8,8 @@ usemathjax: true
 comments: true
 ---
 
+* Table of contents
+{:toc}
 
 This is an introduction to Linear Quadratic Regulator (LQR) for people with an RL background.  
 I view LQR as an important class of control problems that can be solved with RL algorithms.
@@ -62,6 +64,7 @@ where $$x_k\in \mathcal{R}^n$$ and $$u_k\in \mathcal{R}^m$$ denote the state and
 $$A$$ and $$B$$ are matrices of dimensions of `n x n` and `n x m`.
 $$c_k$$ denotes the cost at step $$k$$.
 $$S$$ and $$R$$ are matrices of dimensions of `n x n` and `m x m`, where $$S$$ is positive semi-definite and $$R$$ is positive definite: $$S\succeq 0$$ and $$R\succ 0$$.
+The literature typically assumes that $$A$$ and $$B$$ are unknown and  $$S$$ and $$R$$ are known.
 
 Instead of choosing actions to maximize the sum of rewards $$G_t$$ as in RL, 
 in LQR the objective is to find a sequence of control that **minimizes the sum of cost**.
@@ -71,24 +74,24 @@ There are finite horizon and infinite horizon settings, corresponding to episodi
 
 **Discounted Cost**:
 
-$$ J(u_0, u_1, ...) = \sum_{k=0}^{N} \gamma^{k} \mathbb{E}[c_k] = \sum_{k=0}^{N-1} \gamma^{k} \mathbb{E}(x_k^\top S x_k + u_k^\top R u_k) + \gamma^{N} \mathbb{E}(x_N^\top S x_N)$$
+$$ J(u_0, u_1, ...) = \mathbb{E} [\sum_{k=0}^{N} \gamma^{k} c_k] = \mathbb{E} [\sum_{k=0}^{N-1} \gamma^{k} (x_k^\top S x_k + u_k^\top R u_k) + \gamma^{N} (x_N^\top S x_N)]$$
 
 where the discount factor $$\gamma \in [0,1]$$.
 
 **Average Cost**:
 
-$$ J(u_0, u_1, ...) = \lim_{N\to \infty} \frac{1}{N} \sum_{k=0}^{N} \mathbb{E}[c_k] = \lim_{N\to \infty} \frac{1}{N} \sum_{k=0}^{N} \mathbb{E}(x_k^\top S x_k + u_k^\top R u_k) $$
+$$ J(u_0, u_1, ...) = \lim_{N\to \infty} \mathbb{E} [ \frac{1}{N} \sum_{k=0}^{N} c_k] = \lim_{N\to \infty} \mathbb{E} [\frac{1}{N} \sum_{k=0}^{N} (x_k^\top S x_k + u_k^\top R u_k)] $$
 
 In both objectives, the expectation is wrt the noise so it's not necessary for the deterministic case but we leave it there for completeness.
 
-The average cost objective is studied a lot more than the discounted cost objective in the control theory literature, which is the oppositive of the RL literature.
+The average cost objective is studied a lot more than the discounted cost objective in the control theory literature, which is the opposite of the RL literature.
 
 Although the average cost setting seems to make sense especially for finite sample analysis,
-we only cover the discounted setting in the rest part of this post to align with the RL algorithms.
+we only cover the discounted setting in the rest of this post to align with the RL algorithms.
 
 **Some properties of LQR**
 
-What's nice about LQR is that, its structure allows for some neat properties:
+What's nice about LQR is that its structure allows for some neat properties:
 ```
 * the state and action value function are a quadratic function
 * the optimal policy (called optimal control in LQR), is linear in the state.
@@ -106,7 +109,7 @@ u_* = K_* x = -\gamma (R  + \gamma B^\top P_* B)^{-1} B^\top P_* A x
 \label{eq:ustar}
 \end{equation}
 
-where $$x$$ is any given state and the $$P_*$$ is the solution to Algebraic Riccati Equation (ARE):
+where $$x$$ is any given state, the $$*$$ denotes the optimal solution, $$K_*$$ just denotes the parameter matrix in the linear function of state, and the $$P_*$$ is the solution to Algebraic Riccati Equation (ARE):
 
 $$ P = S + \gamma A^\top P A - \gamma^2 A^\top P B(R+\gamma B^\top P B)^{-1} B^\top P A $$
 
@@ -146,9 +149,8 @@ we can rewrite the equation above as
 -P_k + M + L^\top P_{k+1} L = 0
 \end{equation}
 
-which is called [Lyapunov Equation](https://en.wikipedia.org/wiki/Lyapunov_equation){:target="_blank"}.
+this equation in terms of its steady-state solution $$P_\pi$$ is called [Lyapunov Equation](https://en.wikipedia.org/wiki/Lyapunov_equation){:target="_blank"}.
 
-$$P_\pi$$ is the steady-state solution to this Lyapunov Equation. 
 Note that, if the horizon is finite and not long enough to attain steady-state, we can solve for $$P_\pi$$ recursively (backward in time) where the base case is given by the $$P_k$$ at the terminal step $$N$$ where we assume no control cost: $$V(N) = x_N ^\top S x_N$$.
 
 **Action Value Function $$Q_\pi(x, u)$$**
@@ -157,13 +159,13 @@ It can be shown that the action value function is quadratic in state and action 
 $$
 \begin{align}
 \nonumber Q_\pi(x, u) &=  c(x,u) + \gamma  V_\pi( Ax + Bu) \\ 
-&= [x\ u]^\top \begin{bmatrix} S + \gamma A^\top P_\pi A &  \gamma A^\top P_\pi B \\ \gamma B^\top P_\pi A &  R+\gamma B^\top P_\pi B \end{bmatrix} [x\ u] \\
-&= [x\ u]^\top \begin{bmatrix} H_{11} &  H_{12} \\ H_{21} &  H_{22} \end{bmatrix} [x\ u] 
+&=  \begin{bmatrix}  x \\ u \end{bmatrix}^\top \begin{bmatrix} S + \gamma A^\top P_\pi A &  \gamma A^\top P_\pi B \\ \gamma B^\top P_\pi A &  R+\gamma B^\top P_\pi B \end{bmatrix}  \begin{bmatrix}  x \\ u \end{bmatrix} \\
+&=  \begin{bmatrix}  x \\ u \end{bmatrix}^\top \begin{bmatrix} H_{11} &  H_{12} \\ H_{21} &  H_{22} \end{bmatrix}  \begin{bmatrix}  x \\ u \end{bmatrix} 
 \label{eq:Q}
 \end{align}
 $$
 
-where $$[x\ u]$$ is a column vector from concatenating the vectors $$x$$ and $$u$$. $$H$$ is a positive definite matrix of size `(n+m) x (n+m)`.
+where $$ \begin{bmatrix}  x \\ u \end{bmatrix}$$ is a column vector from concatenating the vectors $$x$$ and $$u$$. $$H$$ is a positive definite matrix of size `(n+m) x (n+m)`.
 Combined with Eq.\eqref{eq:ustar}, the greedy action at state $$x$$ wrt the current policy $$\pi$$ is:
 
 \begin{equation}
@@ -186,9 +188,9 @@ What functions shall we choose for approximating the action value function?
 We can throw a neural network at it. But that might be an overkill. 
 Since we know that the action value funciton is quadratic, we can build the quadratic basis functions from the state-action pair $$[x\ u]$$ and approximate the action value as a linear combination of them:
 
- $$Q_\pi(x, u) = \theta^\top \phi(x, u) $$ 
+ $$Q_\pi(x, u) = \theta^\top \phi([x^\top, u^\top]) $$ 
  
- where $$\theta$$ is the weight vector and the $$ \phi(x, u) $$ is the quadratic basis feature vector: $$ \phi(v) = [v_1^2, \cdots, v_1v_n, v_2^2, \cdots, v_2v_n, v_{n-1}^2, v_{n-1}v_n, \cdots v_n^2] $$ 
+ where $$\theta$$ is the weight vector and the $$ \phi([x^\top, u^\top]) $$ is the quadratic basis feature vector: $$ \phi(v) = [v_1^2, \cdots, v_1v_n, v_2^2, \cdots, v_2v_n, v_{n-1}^2, v_{n-1}v_n, \cdots v_n^2] $$ 
  
  There are $$(n+m)^2$$ entries in the matrix $$H$$ but we do not need to estimate that many parameters due to $$H$$ being symmetric. 
 
@@ -216,7 +218,7 @@ $$c_{k} = x_k^\top S x_k + u_k^\top R u_k$$
 where $$w_k \in \mathcal{R}^n $$ is the noise term, often modeled as an i.i.d multi-variate Gaussian $$w_k \sim \mathcal{N}(0,\Sigma_w) $$. 
 The per-step cost is defined the same way as the deterministic case.
 
-What's nice about it is that despite the noise, the optimal policy $$\pi_*$$ and the matrices $$P_*, P_\pi$$ remain the same as the deterministic case. The value and action value functions differ from the ones in deterministic cases by only a constant(time dependent, but not state or action dependent). It is caused by the accumulation of additional cost from the noise and would reduce over time to 0 at the terminal state.
+What's nice about this is that despite the noise, the optimal policy $$\pi_*$$ and the matrices $$P_*, P_\pi$$ remain the same as the deterministic case. The value and action value functions differ from the ones in deterministic cases by only a constant(time dependent, but not state or action dependent). It is caused by the accumulation of additional cost from the noise and would reduce over time to 0 at the terminal state.
 
 ## Continuous-time Deterministic LQR
 
@@ -249,11 +251,11 @@ where $$S$$ and $$R$$ are fixed, symmetric positive semi-definite and definite m
 
 **Discounted Cost**:
 
-$$ J(u) = \int_0^T \gamma^{t} \mathbb{E}[c_t] dt = \int_0^T \gamma^{t} \mathbb{E}[x(t)^\top S x(t) + u(t)^\top R u(t)] dt +  \gamma^{T}\mathbb{E}[x(T)^\top S x(T)]$$
+$$ J(u) = \mathbb{E}[\int_0^T \gamma^{t} c_t dt] = \mathbb{E}[ \int_0^T \gamma^{t} (x(t)^\top S x(t) + u(t)^\top R u(t)) dt +  \gamma^{T} x(T)^\top S x(T)]$$
 
 **Average Cost**:
 
-$$ J(u) = \lim_{T\to \infty} \frac{1}{T} \int_0^T \mathbb{E}[c_t] dt =\lim_{T\to \infty} \frac{1}{T} \int_0^T \mathbb{E}[x(t)^\top S x(t) + u(t)^\top R u(t)] dt $$
+$$ J(u) =  \lim_{T\to \infty} \mathbb{E}[ \frac{1}{T} \int_0^T c_t] dt =  \lim_{T\to \infty} \mathbb{E}[ \frac{1}{T} \int_0^T (x(t)^\top S x(t) + u(t)^\top R u(t)) dt] $$
 
 **Discretization of the System with Time Duration $$h$$**:
 
@@ -327,12 +329,12 @@ $$
     Q_\pi(x(t),u(t)) &= r(x(t),u(t)) + \gamma^h V_\pi(x(t+h)) \\
     &= [x\ u]^\top
     \begin{bmatrix} hS + \gamma^h(P_\pi +hP_\pi A+hA^\top P_\pi) & \gamma^h h P_\pi B \\ \gamma^h h B^\top P_\pi & hR \end{bmatrix} \begin{bmatrix}  x \\ u \end{bmatrix}  \\
-    &= [x\ u]^\top
+    &= \begin{bmatrix}  x \\ u \end{bmatrix}^\top
      \begin{bmatrix} H_{11} &  H_{12} \\  H_{21} &  H_{22} \end{bmatrix}
-     [x\ u] \\
-     &= [x\ u]^\top
+     \begin{bmatrix}  x \\ u \end{bmatrix} \\
+     &= \begin{bmatrix}  x \\ u \end{bmatrix}^\top
      H_\pi
-     [x\ u]
+     \begin{bmatrix}  x \\ u \end{bmatrix}
 \end{align}
 $$
 
@@ -353,7 +355,7 @@ Once we obtain good estimation of the weight vector, we can compute the greedy a
 
 **Stability and Controllability**
 
-For `stability`, we need to make sure the eigenvalues of $$A+BK$$ are all negative.
+For `stability`, we need to make sure the real parts of the eigenvalues of $$A+BK$$ are all negative.
 
 For `controllability`, it's the same as in the discrete-time.
 
@@ -416,20 +418,19 @@ A few details that are worth attention:
 
 - The input: state $$x$$ is the distance between the current position and the target position
 - The reward/cost: instead of Euclidean distance, should be the square of Euclidean distance, plus some quadratic cost on the action. Analysis can be performed for the case of zero-cost on action. But the optimal policy will be bang-bang control.
-- The system dynamic will be approximated as piece-wise linear, which is another layer of approximation on top of the time-invariant system discussed in this post.
+- The system dynamic can be approximated as piece-wise linear, which is another layer of approximation on top of the time-invariant system discussed in this post.
 
 ## Show me the code
 
 Well, sorry that the code is not fully developed at this point to share.
 
-But Stephen Tu has an awesome tutorial on running LQR on Cartpole Swing-Up:
+You might want to check out this awesome tutorial by Stephen Tu on running LQR on Cartpole Swing-Up:
 [https://github.com/stephentu/zero-to-cartpole/blob/master/swing-up.ipynb](https://github.com/stephentu/zero-to-cartpole/blob/master/swing-up.ipynb)
 
 
 
 
-
-## Reference:
+## Reference
 [1] Wendell, H. FLEMING, R. W. Rishel, and W. Raymond. Deterministic and stochastic optimal control. (1975).
 
 [2] Blog of Ben Recht: http://www.argmin.net/2018/02/08/lqr/
